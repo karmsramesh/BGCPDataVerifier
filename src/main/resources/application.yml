@@ -35,3 +35,8 @@ file:
   databaseType: CLS_WAA.dbo
   threadCount: 5
   batchsize: 1000
+
+  
+ app:
+  GCXPSTR:
+   targetAttributes: INXEXTR_CIS_PRODUCT_CODE,INXEXTR_ACC_NUMBER,INXEXTR_SUB_LOAN_NUMBER
