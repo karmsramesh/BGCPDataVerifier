@@ -63,9 +63,6 @@ public class DataProcessorController {
         }
     }
     
-    
-    
-    
     @GetMapping("/storeToDBBGCPFiles")
     public ResponseEntity<String> storeToDBBGCPFiles(@RequestParam String applCode, @RequestParam String startingFrom) 
     {

@@ -3,7 +3,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:mariadb://192.168.118.86:3308/mysql
+    url: jdbc:mariadb://192.168.118.86:3308/your_db
     username: root
     password: password1
     driver-class-name: org.mariadb.jdbc.Driver

@@ -3,10 +3,10 @@ server:
 
 spring:
   datasource:
-    url: jdbc:mariadb://192.168.118.86:3308/mysql
-    username: root
+    url: jdbc:sqlserver://localhost:1433;encrypt=true;TrustServerCertificate=true;databaseName=CLS_WAA;
+    username: sqluser
     password: password1
-    driver-class-name: org.mariadb.jdbc.Driver
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
   jpa:
     show-sql: true
     hibernate:
@@ -18,10 +18,7 @@ spring:
         generate_statistics: false
         jdbc:
           batch_size: 1000
-        dialect: org.hibernate.dialect.MariaDBDialect
-    database-platform: org.hibernate.dialect.MariaDBDialect
-
-
+        dialect: org.hibernate.dialect.SQLServerDialect
 
 #####File Configurations#####
 file:

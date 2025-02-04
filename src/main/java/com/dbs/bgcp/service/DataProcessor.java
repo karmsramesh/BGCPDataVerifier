@@ -306,6 +306,7 @@ public class DataProcessor {
 		            {
 			            for (Cell cell : headerRow) 
 			            {
+			            	System.out.println("cell.getStringCellValue()>"+cell.getStringCellValue()+"<");
 			                headers.add(cell.getStringCellValue());
 			            }
 		            }
@@ -338,7 +339,7 @@ public class DataProcessor {
 		HashMap<String,String> target_attributes=new HashMap<String,String>();
 		 List<String> target_attributesList = new ArrayList<>();
 		
-		deleteRecordsByAppCode("T_BGCP_COL_CONFIG",  appCode);
+		
 		
         try (FileInputStream fis = new FileInputStream(new File(columnConfigFilePath));
         		XSSFWorkbook workbook = new XSSFWorkbook(fis)) 
@@ -361,6 +362,8 @@ public class DataProcessor {
 		            {
 		            	createTable("T_BGCP_COL_CONFIG", columnHeaders);
 		            }
+		            
+		            deleteRecordsByAppCode("T_BGCP_COL_CONFIG",  appCode);
 		
 		            for (int i = 1; i <= sheet.getLastRowNum(); i++) 
 		            { 
@@ -431,8 +434,10 @@ public class DataProcessor {
     private void createTable(String tableName, List<String> columnHeaders) 
     {
         StringBuilder createTableSQL = new StringBuilder("CREATE TABLE " + tableName + " (");
-        for (String column : columnHeaders) {
-            createTableSQL.append(column).append(" NVARCHAR(MAX),");
+        for (String column : columnHeaders) 
+        {
+           // createTableSQL.append(column).append(" NVARCHAR(MAX),");]
+           createTableSQL.append(column).append(" VARCHAR(50),");
         }
         createTableSQL.setLength(createTableSQL.length() - 1); 
         createTableSQL.append(")");
@@ -441,11 +446,17 @@ public class DataProcessor {
     }
     
     public boolean doesTableExist(String tableName) {
-        String sql = "SELECT CASE WHEN EXISTS (" +
-                     "SELECT 1 FROM INFORMATION_SCHEMA.TABLES " +
-                     "WHERE TABLE_NAME = ? AND TABLE_TYPE = 'BASE TABLE') THEN 1 ELSE 0 END";
+        String sqlserversql = " SELECT CASE WHEN EXISTS (" +
+                     " SELECT 1 FROM INFORMATION_SCHEMA.TABLES " +
+                     " WHERE TABLE_NAME = ? AND TABLE_TYPE = 'BASE TABLE') THEN 1 ELSE 0 END";
+        
+        
+        String mariadbsql = "SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END " +
+                "FROM INFORMATION_SCHEMA.TABLES " +
+                "WHERE TABLE_NAME = ? AND TABLE_SCHEMA = DATABASE()";
+        
 
-        Integer result = jdbcTemplate.queryForObject(sql, new Object[]{tableName}, Integer.class);
+        Integer result = jdbcTemplate.queryForObject(mariadbsql, new Object[]{tableName}, Integer.class);
 
         return result != null && result == 1;
     }
