@@ -126,4 +126,16 @@ public class SystemConfigRepository {
         return alList;
     }
 
+    public List<TBgcpColConfig> fetchUniqueColConfig(String appCode, String[] cols) {
+        ArrayList<TBgcpColConfig> alList = new ArrayList<TBgcpColConfig>();
+
+        String sql = "select *  from T_BGCP_COL_CONFIG where APP_CODE=:appCode and Target_Attribute IN :cols ";
+        Query query = entityManager.createNativeQuery(sql, Map.class);
+        query.setParameter("appcode", appCode);
+        query.setParameter("cols", cols);
+        List<TBgcpColConfig> queryResult = query.getResultList();
+
+        return queryResult;
+    }
+
 }

@@ -19,4 +19,10 @@ public class StagingBGCPService {
         
         return jdbcTemplate.queryForList(sql, runDateValue);
     }
+
+    public Map<String, Object> getStagingRecord(String whereCondtion) {
+        String sql = "select * from staging_gcsp where " + whereCondtion;
+        return jdbcTemplate.queryForMap(sql);
+    }
+
 }

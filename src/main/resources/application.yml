@@ -3,9 +3,9 @@ server:
 
 spring:
   datasource:
-    url: jdbc:mariadb://192.168.118.86:3308/mysql
+    url: jdbc:mariadb://localhost:3306/bgcp
     username: root
-    password: password1
+    password: root123
     driver-class-name: org.mariadb.jdbc.Driver
   jpa:
     show-sql: true
@@ -29,14 +29,13 @@ file:
   trailer: TRAILER
   detail: DETAIL
 
-  baseFilePath: C:\Users\S03\Desktop\DBS\BGCPFILES
+  baseFilePath: C:\Projects\BGCPDataVerifier\src\main\resources\BGCPFILES
 
 
   databaseType: CLS_WAA.dbo
   threadCount: 5
   batchsize: 1000
 
-  
- app:
+app:
   GCXPSTR:
-   targetAttributes: INXEXTR_CIS_PRODUCT_CODE,INXEXTR_ACC_NUMBER,INXEXTR_SUB_LOAN_NUMBER
+    targetAttributes: INXEXTR_CIS_PRODUCT_CODE,INXEXTR_ACC_NUMBER,INXEXTR_SUB_LOAN_NUMBER
