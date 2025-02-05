@@ -1,8 +1,6 @@
 package com.dbs.bgcp.service;
 
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -21,16 +19,6 @@ public class SummaryProcessingService {
     @Autowired
     private StagingBGCPService StagingbGCPService;
 
-    @Value("${app.GCXPSTR.targetAttributes}")
-    private String systemAttribute;
-
-    String[] systemAttributeList = null;
-    @PostConstruct
-    public void init() {
-        systemAttributeList = systemAttribute.split(",");
-    }
-
-
     /**
      * Processes the file and stores the summary in the bgcp_summary table.
      */
@@ -42,55 +30,99 @@ public class SummaryProcessingService {
         try 
         {
             List<Map<String, Object>> dbRecords = StagingbGCPService.fetchRecordsByRunDate(runDateValue, tableName,  dateColumn);
-
-
             int totalLinesInFile = recordsWithValue.size();
             int totalLinesInTable = dbRecords.size();
 
             int matchedRecords = 0;
             int unmatchedRecords = 0;
             int lineNumber=1;
-            StringBuilder uniqueKey = new StringBuilder();
-            StringBuilder whereCondition = new StringBuilder();
             for ( Map<String, String>   fileRecord  : recordsWithValue)
             {
-                for(int i=0; i<systemAttributeList.length;i++) {
-                    whereCondition.append(systemAttributeList[i]).append("=").append(fileRecord.get(systemAttributeList[i])).append(" AND ");
-                    uniqueKey.append(fileRecord.get(systemAttributeList[i])) ;
-                    if(i!=systemAttributeList.length-1) {
-                        uniqueKey.append("/");
-                    }
-                    whereCondition.append(dateColumn).append("=").append(runDateValue);
-                }
-                boolean matchFound = false;
-                Map<String, Object> stagingGcsp = StagingbGCPService.getStagingRecord(whereCondition.toString());
-                List<String> unMatchedColumns = new ArrayList<>();
-                for(TBgcpColConfig colconfig:allColumnList)
+                boolean fullymatchFound = false;
+                List<String> finalnonmatchcolumnsList = null;
+                int globalnonmatchcount=0;
+                for (Map<String, Object> dbRecord: dbRecords)
                 {
-                    if(!stagingGcsp.get(colconfig.getTarget_Attribute()).toString().equals(fileRecord.get(colconfig.getSource_Attribute()))) {
-                        matchFound = false;
-                        unMatchedColumns.add(colconfig.getTarget_Attribute());
+                	if("FULL_MATCH".equals(dbRecord.get("FULL_MATCH")) ) continue;
+                	boolean fullymatch =true;
+                	List<String> localnonmatchcolumnsList = new ArrayList<>();
+                	int notmatchCount=0;
+                	boolean hasnomatch=false;
+                    for(TBgcpColConfig colconfig:allColumnList)
+                    {
+                    	colconfig.setNonMatchColumnInfo("");
+                    	System.out.println(dbRecord.get(colconfig.getTarget_Attribute()).toString() +" "+fileRecord.get(colconfig.getSource_Attribute()));
+
+                    	boolean colmatch= dbRecord.get(colconfig.getTarget_Attribute()).toString().equals(fileRecord.get(colconfig.getSource_Attribute()));
+
+                    	fullymatch = fullymatch && colmatch;
+                    	if(colmatch)
+                    	{
+                    		colconfig.setMatchNonMatch("M");
+                    	}
+                    	else
+                    	{
+                    		hasnomatch=true;
+                    		colconfig.setMatchNonMatch("N");
+                    		colconfig.setNonMatchColumnInfo(dbRecord.get(colconfig.getTarget_Attribute()).toString() +" != "+fileRecord.get(colconfig.getSource_Attribute() ) );
+                    	}
+                    	if(!fullymatch)
+                    	{
+                    		notmatchCount++;
+                    		localnonmatchcolumnsList.add(dbRecord.get(colconfig.getTarget_Attribute()).toString());
+                    		System.out.println("COLUMN NOT MATCH >"+notmatchCount+"<");
+                    	}
                     }
 
+                    int nonmatchcount=0;
+                    if(hasnomatch)
+                    {
+	                    for(TBgcpColConfig colconfig:allColumnList)
+	                    {
+	                    	if("N".equals(colconfig.getMatchNonMatch()) )
+	                    	{
+	                    		nonmatchcount++;
+	                    		localnonmatchcolumnsList.add(colconfig.getNonMatchColumnInfo());
+	                    	}
+	                    }
+
+	                    if(nonmatchcount>0 )
+	                    {
+	                    	if(globalnonmatchcount==0 || nonmatchcount < globalnonmatchcount)
+	                    	{
+	                    		globalnonmatchcount=nonmatchcount;
+	                    		finalnonmatchcolumnsList=localnonmatchcolumnsList;
+	                    	}
+	                    }
+                    }
+
+                    if (fullymatch)
+                    {
+                    	dbRecord.put("FULL_MATCH", "FULL_MATCH");
+                        fullymatchFound = true;
+                        break;
+                    }
                 }
-                if (matchFound)
+
+                if (fullymatchFound)
                 {
+                	fileRecord.put("FULL_MATCH", "FULL_MATCH");
                     matchedRecords++;
                     insertDetailSummaryIntoTable(appCode, runDateValue, "M", lineNumber, fileRecord.get("FULL_LINE"));
-                } else
+                }
+                else
                 {
                     unmatchedRecords++;
-                    System.out.println(String.join(",", unMatchedColumns));
-                    System.out.println(uniqueKey);
-                    insertDetailSummaryIntoTable(appCode, runDateValue, "N",  lineNumber,fileRecord.get("FULL_LINE"));
+                    insertDetailSummaryIntoTable(appCode, runDateValue, "N",  lineNumber, globalnonmatchcount+" "+finalnonmatchcolumnsList.toString());
                 }
                 lineNumber++;
-                
             }
 
             insertSummaryIntoTable(appCode, runDateValue, totalLinesInFile, totalLinesInTable, matchedRecords, unmatchedRecords);
 
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
         	processingError=true;
             e.printStackTrace();
             throw new RuntimeException("Error processing file and storing summary", e);

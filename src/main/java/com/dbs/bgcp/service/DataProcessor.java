@@ -161,7 +161,8 @@ public class DataProcessor {
 					"System configuration for application code " + appCode + "not found in T_EGL_BASE_SYSTEMS Table");
 			throw new NoDataException(
 					" System configuration for application code - '" + appCode + " not found in BASE_SYSTEM table");
-		}else
+		}
+		else
 		{
 
 			switch (startingFrom) 
