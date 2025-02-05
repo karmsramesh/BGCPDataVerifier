@@ -59,7 +59,23 @@ public class TBgcpColConfig {
     private String colValue;
     private Boolean hasError=false;
     private String errorMessage;
-
+    private String MatchNonMatch="";
+    private String nonMatchColumnInfo="";
+    
+    
+	public String getNonMatchColumnInfo() {
+		return nonMatchColumnInfo;
+	}
+	public void setNonMatchColumnInfo(String nonMatchColumnInfo) {
+		this.nonMatchColumnInfo = nonMatchColumnInfo;
+	}
+	public String getMatchNonMatch() {
+		return MatchNonMatch;
+	}
+	public void setMatchNonMatch(String matchNonMatch) {
+		MatchNonMatch = matchNonMatch;
+	}
+	
 	public String getApp_Code() {
 		return App_Code;
 	}
